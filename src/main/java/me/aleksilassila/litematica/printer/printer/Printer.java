@@ -47,6 +47,7 @@ public class Printer extends PrinterUtils {
     public final Queue queue;
 	public static int tick_1;
 	public static int tick_2;
+    public static int PRE_BLOCK = Integer.MIN_VALUE;
 
     public static ArrayList<Block> hasFace = new ArrayList<>();
 	public static ArrayList<Block> hasNoFace = new ArrayList<>();
@@ -151,6 +152,7 @@ public class Printer extends PrinterUtils {
 					for (int z = -range; z < range + 1; z++) {
 						BlockPos center = player.getBlockPos().north(x).west(z).up(y);
 						BlockState requiredState = worldSchematic.getBlockState(center);
+                        BlockState currentState = world.getBlockState(center);
 //                        Block requiredBlock = requiredState.getBlock();
 						PlacementGuide.Action action = guide.getAction(world, worldSchematic, center);
 
@@ -162,56 +164,62 @@ public class Printer extends PrinterUtils {
 						
 						if (side == null) continue;
 						
-						
+                        State state = State.get(requiredState, currentState);
+                        if( state == State.MISSING_BLOCK || state == State.WRONG_STATE ){
 
-						Item[] requiredItems = action.getRequiredItems(requiredState.getBlock());
-						if (playerHasAccessToItems(player, requiredItems)) {
+                            Item[] requiredItems = action.getRequiredItems(requiredState.getBlock());
+                            if (playerHasAccessToItems(player, requiredItems)) {
+
+                                // Keep previous block reduce item swaping times
+                                if( state == State.MISSING_BLOCK && PRE_BLOCK != Integer.MIN_VALUE && PRE_BLOCK != Block.getRawIdFromState(requiredState) ) continue;
+                                PRE_BLOCK = Block.getRawIdFromState(requiredState);
 
 
-							// Handle shift and chest placement
-							// Won't be required if clickAction
-								
-							boolean useShift = false;
-							if (requiredState.contains(ChestBlock.CHEST_TYPE)) {
-								// Left neighbor from player's perspective
-								BlockPos leftNeighbor = center.offset(requiredState.get(ChestBlock.FACING).rotateYClockwise());
-								BlockState leftState = world.getBlockState(leftNeighbor);
+                                // Handle shift and chest placement
+                                // Won't be required if clickAction
+                                    
+                                boolean useShift = false;
+                                if (requiredState.contains(ChestBlock.CHEST_TYPE)) {
+                                    // Left neighbor from player's perspective
+                                    BlockPos leftNeighbor = center.offset(requiredState.get(ChestBlock.FACING).rotateYClockwise());
+                                    BlockState leftState = world.getBlockState(leftNeighbor);
 
-                                switch (requiredState.get(ChestBlock.CHEST_TYPE)) {
-                                    case SINGLE, RIGHT ->
-                                        useShift = true;
+                                    switch (requiredState.get(ChestBlock.CHEST_TYPE)) {
+                                        case SINGLE, RIGHT ->
+                                            useShift = true;
 
-                                    case LEFT -> { // Actually right
-                                        if (leftState.contains(ChestBlock.CHEST_TYPE) && leftState.get(ChestBlock.CHEST_TYPE) == ChestType.SINGLE) {
+                                        case LEFT -> { // Actually right
+                                            if (leftState.contains(ChestBlock.CHEST_TYPE) && leftState.get(ChestBlock.CHEST_TYPE) == ChestType.SINGLE) {
 
-                                            // Check if it is possible to place without shift
-                                            if (Implementation.isInteractive(world.getBlockState(center.offset(side)).getBlock())) {
+                                                // Check if it is possible to place without shift
+                                                if (Implementation.isInteractive(world.getBlockState(center.offset(side)).getBlock())) {
+                                                    continue;
+                                                }
+                                            } else {
                                                 continue;
                                             }
-                                        } else {
-                                            continue;
                                         }
                                     }
+                                } else if (Implementation.isInteractive(world.getBlockState(center.offset(side)).getBlock())) {
+                                    useShift = true;
                                 }
-							} else if (Implementation.isInteractive(world.getBlockState(center.offset(side)).getBlock())) {
-								useShift = true;
-							}
 
-                            try {
-                                if (requiredState.get(Properties.FACING) != null) {
-                                    hasFace.add(requiredState.getBlock());
+                                try {
+                                    if (requiredState.get(Properties.FACING) != null) {
+                                        hasFace.add(requiredState.getBlock());
+                                    }
                                 }
+                                catch (Exception e){
+                                    hasNoFace.add(requiredState.getBlock());
+                                };
+
+                                Direction lookDir = action.getLookDirection();
+                                sendPlacementPreparation(player, requiredItems, lookDir);
+                                action.queueAction(queue, center, side, useShift, lookDir != null);
+                                return;
                             }
-                            catch (Exception e){
-                                hasNoFace.add(requiredState.getBlock());
-                            };
-
-                            Direction lookDir = action.getLookDirection();
-                            sendPlacementPreparation(player, requiredItems, lookDir);
-                            action.queueAction(queue, center, side, useShift, lookDir != null);
-                            return;
-						}
-					}
+                        }
+                    }
 				}
 			}
 	}
