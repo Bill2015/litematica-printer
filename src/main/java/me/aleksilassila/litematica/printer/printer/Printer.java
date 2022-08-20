@@ -170,9 +170,11 @@ public class Printer extends PrinterUtils {
                             Item[] requiredItems = action.getRequiredItems(requiredState.getBlock());
                             if (playerHasAccessToItems(player, requiredItems)) {
 
-                                // Keep previous block reduce item swaping times
-                                if( state == State.MISSING_BLOCK && PRE_BLOCK != Integer.MIN_VALUE && PRE_BLOCK != Block.getRawIdFromState(requiredState) ) continue;
-                                PRE_BLOCK = Block.getRawIdFromState(requiredState);
+                                if( LitematicaMixinMod.PRINT_SWAP_OPTIMIZE.getBooleanValue() ){
+                                    // Keep previous block reduce item swaping times
+                                    if( state == State.MISSING_BLOCK && PRE_BLOCK > 0 && PRE_BLOCK != Block.getRawIdFromState(requiredState) ) continue;
+                                    PRE_BLOCK = Block.getRawIdFromState(requiredState);
+                                }
 
 
                                 // Handle shift and chest placement
@@ -222,6 +224,7 @@ public class Printer extends PrinterUtils {
                     }
 				}
 			}
+            PRE_BLOCK = Integer.MIN_VALUE;
 	}
 	
 	

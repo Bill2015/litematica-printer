@@ -19,7 +19,8 @@ public class LitematicaMixinMod implements ModInitializer {
 	public static final ConfigInteger PRINT_INTERVAL = new ConfigInteger( "printInterval", 10,   10, 60, "Print interval in game ticks. Lower values mean faster printing speed.\nIf the printer creates \"ghost blocks\", raise this value.");
 	public static final ConfigInteger PRINT_INTERVAL_NR = new ConfigInteger( "printIntervalNR", 2,   2, 60, "Print interval in game ticks for non-rotated blocks. Lower values mean faster printing speed.\nIf the printer creates \"ghost blocks\", raise this value.");
     public static final ConfigInteger PRINTING_RANGE = new ConfigInteger("printingRange", 2,     1,   6,   "Printing block place range\nLower values are recommended for servers.");
-//    public static final ConfigBoolean PRINT_WATER    = new ConfigBoolean("printWater",    false, "Whether or not the printer should place water\n source blocks or make blocks waterlogged.");
+    public static final ConfigBoolean PRINT_SWAP_OPTIMIZE = new ConfigBoolean("printSwapOptimize",    false, "When print a complex section, the default action will rapidly swaping item. \nIt may kick out some anit-cheat server.\n Enable will optimize the item swap logic prevent to rapidly swap.");
+	//    public static final ConfigBoolean PRINT_WATER    = new ConfigBoolean("printWater",    false, "Whether or not the printer should place water\n source blocks or make blocks waterlogged.");
     public static final ConfigBoolean PRINT_IN_AIR = new ConfigBoolean("printInAir",    true, "Whether or not the printer should place blocks without anything to build on.\nBe aware that some anti-cheat plugins might notice this.");
     public static final ConfigBoolean PRINT_MODE 	 = new ConfigBoolean("printingMode",  false, "Autobuild / print loaded selection.\nBe aware that some servers and anticheat plugins do not allow printing.");
     public static final ConfigBoolean REPLACE_FLUIDS = new ConfigBoolean("replaceFluids", false, "Whether or not fluid source blocks should be replaced by the printer.");
@@ -33,6 +34,7 @@ public class LitematicaMixinMod implements ModInitializer {
 		list.add(PRINT_INTERVAL);
 		list.add(PRINT_INTERVAL_NR);
 		list.add(PRINTING_RANGE);
+		list.add(PRINT_SWAP_OPTIMIZE);
 		list.add(PRINT_IN_AIR);
 		list.add(REPLACE_FLUIDS);
 		list.add(STRIP_LOGS);
